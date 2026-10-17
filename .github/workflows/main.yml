@@ -1,0 +1,58 @@
+
+name: App Master Store Website Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-website:
+    name: Validate Website Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required website files
+        run: |
+          set -eu
+
+          test -f index.html || {
+            echo "ERROR: index.html is missing"
+            exit 1
+          }
+
+          test -f styles.css || {
+            echo "ERROR: styles.css is missing"
+            exit 1
+          }
+
+          test -f script.js || {
+            echo "ERROR: script.js is missing"
+            exit 1
+          }
+
+          echo "SUCCESS: All required website files exist."
+
+      - name: Check HTML references
+        run: |
+          grep -q 'styles.css' index.html || {
+            echo "ERROR: styles.css is not referenced in index.html"
+            exit 1
+          }
+
+          grep -q 'script.js' index.html || {
+            echo "ERROR: script.js is not referenced in index.html"
+            exit 1
+          }
+
+          echo "SUCCESS: CSS and JavaScript references found."
