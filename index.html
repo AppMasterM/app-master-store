@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0d14" />
+    <meta
+      name="description"
+      content="Discover Android apps and useful web apps at App Master Store."
+    />
+    <title>App Master Store — Discover Your Next App</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="App Master Store home">
+        <span class="brand-icon">A<span>+</span></span>
+        <span>App Master <b>Store</b></span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a class="nav-link active" href="#home">Home</a>
+        <a class="nav-link" href="#apps">Explore Apps</a>
+        <a class="nav-link" href="#about">About</a>
+      </nav>
+
+      <a class="header-button" href="#apps">Explore Store <span>↗</span></a>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <div class="hero-content">
+          <div class="eyebrow">
+            <span class="live-dot"></span> YOUR NEXT FAVORITE APP STARTS HERE
+          </div>
+          <h1>Discover apps.<br />Unlock <span>possibilities.</span></h1>
+          <p class="hero-description">
+            Explore useful Android apps and web experiences, all in one simple
+            place.
+          </p>
+
+          <div class="hero-actions">
+            <a class="primary-button" href="#apps"
+              >Explore Apps <span>→</span></a
+            >
+            <a class="secondary-button" href="#about">Learn More</a>
+          </div>
+
+          <div class="hero-note">
+            <span class="check-mark">✓</span>
+            Carefully presented apps. Simple access. One store.
+          </div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="app-tile tile-one">📚</div>
+          <div class="app-tile tile-two">✦</div>
+          <div class="app-tile tile-three">⚡</div>
+          <div class="app-tile tile-four">◈</div>
+          <div class="showcase-card">
+            <div class="showcase-top">
+              <span class="showcase-dot"></span>
+              <span class="showcase-dot"></span>
+              <span class="showcase-dot"></span>
+              <span class="showcase-label">APP MASTER</span>
+            </div>
+            <div class="showcase-logo">A<span>+</span></div>
+            <div class="showcase-title">Your apps.<br />Your discovery.</div>
+            <div class="showcase-line"></div>
+            <div class="showcase-caption">A better place to start</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Store features">
+        <div><span>◈</span> Curated collection</div>
+        <div><span>↗</span> Direct app access</div>
+        <div><span>▣</span> Mobile-friendly design</div>
+      </section>
+
+      <section class="store-section" id="apps">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">THE COLLECTION</div>
+            <h2>Find your next <span>favorite.</span></h2>
+            <p class="section-description">
+              Explore our apps and discover something useful.
+            </p>
+          </div>
+          <div class="app-count" id="app-count">3 apps</div>
+        </div>
+
+        <div class="search-box">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search apps by name or description..."
+            aria-label="Search apps"
+          />
+          <span class="search-hint">SEARCH</span>
+        </div>
+
+        <div class="filters" id="category-filters" aria-label="Filter apps">
+          <button
+            class="filter-button active"
+            data-category="All"
+            type="button"
+          >
+            All Apps
+          </button>
+          <button class="filter-button" data-category="Education" type="button">
+            Education
+          </button>
+          <button class="filter-button" data-category="AI Tools" type="button">
+            AI Tools
+          </button>
+          <button
+            class="filter-button"
+            data-category="Developer Tools"
+            type="button"
+          >
+            Developer Tools
+          </button>
+        </div>
+
+        <div class="app-grid" id="app-grid" aria-live="polite">
+          <p class="loading-message">Loading apps...</p>
+        </div>
+
+        <div class="empty-state" id="empty-state" hidden>
+          <div class="empty-icon">⌕</div>
+          <h3>No apps found</h3>
+          <p>Try a different search or category.</p>
+          <button class="secondary-button" id="clear-search" type="button">
+            Clear filters
+          </button>
+        </div>
+
+        <p class="store-disclaimer">
+          App availability depends on the download links configured by the site
+          owner.
+        </p>
+      </section>
+
+      <section class="about-section" id="about">
+        <div class="about-symbol">A<span>+</span></div>
+        <div class="about-content">
+          <div class="eyebrow">ABOUT THE STORE</div>
+          <h2>Built for people who love <span>useful technology.</span></h2>
+          <p>
+            App Master Store is an independent app-discovery website. Our goal
+            is to make it easy to find our apps, understand what they do, and
+            access official download or web-app links.
+          </p>
+        </div>
+      </section>
+
+      <section class="notice-section">
+        <div class="notice-icon">ⓘ</div>
+        <div>
+          <h3>Download safely</h3>
+          <p>
+            Only install APK files from sources you trust. Review the app
+            details and permissions before installing. Android may ask you to
+            approve installation from your browser.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a class="brand footer-brand" href="#home">
+        <span class="brand-icon">A<span>+</span></span>
+        <span>App Master <b>Store</b></span>
+      </a>
+      <p>Discover. Download. Get more done.</p>
+      <div class="footer-links">
+        <a href="#home">Home</a>
+        <a href="#apps">Apps</a>
+        <a href="#about">About</a>
+        <a href="mailto:contact@example.com">Contact</a>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="current-year"></span> App Master Store</span>
+        <span>Made with care.</span>
+      </div>
+    </footer>
+
+    <dialog class="app-dialog" id="app-dialog" aria-labelledby="dialog-title">
+      <button
+        class="dialog-close"
+        id="dialog-close"
+        type="button"
+        aria-label="Close details"
+      >
+        ×
+      </button>
+      <div id="dialog-content"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
