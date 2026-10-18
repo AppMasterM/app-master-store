@@ -1,59 +1,12 @@
 
-const PASSWORD_ITERATIONS = 250000;
+"use strict";
 
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store",
-      "X-Content-Type-Options": "nosniff"
-    }
-  });
-}
-
-function randomHex(byteCount = 16) {
-  const bytes = crypto.getRandomValues(
-    new Uint8Array(byteCount)
-  );
-
-  return Array.from(bytes)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function toHex(buffer) {
-  return Array.from(new Uint8Array(buffer))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function hashPassword(password, saltHex) {
-  const salt = new Uint8Array(
-    saltHex.match(/.{2}/g).map((part) => parseInt(part, 16))
-  );
-
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits"]
-  );
-
-  const result = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt,
-      iterations: PASSWORD_ITERATIONS
-    },
-    key,
-    256
-  );
-
-  return toHex(result);
-}
+import {
+  jsonResponse,
+  randomHex,
+  hashPassword,
+  createSession
+} from "../_utils.js";
 
 export async function onRequestPost({ request, env }) {
   if (!env.DB) {
@@ -83,6 +36,13 @@ export async function onRequestPost({ request, env }) {
     );
   }
 
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return jsonResponse(
+      { error: "Invalid registration details." },
+      400
+    );
+  }
+
   const displayName =
     typeof body.displayName === "string"
       ? body.displayName.trim()
@@ -98,10 +58,7 @@ export async function onRequestPost({ request, env }) {
       ? body.password
       : "";
 
-  if (
-    displayName.length < 2 ||
-    displayName.length > 60
-  ) {
+  if (displayName.length < 2 || displayName.length > 60) {
     return jsonResponse(
       { error: "Name must be between 2 and 60 characters." },
       400
@@ -128,18 +85,9 @@ export async function onRequestPost({ request, env }) {
   const id = crypto.randomUUID();
   const salt = randomHex(16);
 
-  let passwordHash;
-
   try {
-    passwordHash = await hashPassword(password, salt);
-  } catch {
-    return jsonResponse(
-      { error: "Could not securely process the password." },
-      500
-    );
-  }
+    const passwordHash = await hashPassword(password, salt);
 
-  try {
     await env.DB.prepare(`
       INSERT INTO developers (
         id,
@@ -153,6 +101,8 @@ export async function onRequestPost({ request, env }) {
       .bind(id, displayName, email, salt, passwordHash)
       .run();
 
+    const session = await createSession(env, id);
+
     return jsonResponse(
       {
         success: true,
@@ -163,7 +113,10 @@ export async function onRequestPost({ request, env }) {
           email
         }
       },
-      201
+      201,
+      {
+        "Set-Cookie": session.cookie
+      }
     );
   } catch (error) {
     const message = String(error?.message || "");
@@ -179,9 +132,11 @@ export async function onRequestPost({ request, env }) {
     }
 
     return jsonResponse(
-      { error: "Account creation failed. Please try again." },
+      {
+        error: "Account creation failed. Please try again."
+      },
       500
     );
   }
-    }
-  
+}
+
