@@ -1,4 +1,3 @@
-
 "use strict";
 
 import {
@@ -119,6 +118,9 @@ export async function onRequestPost({ request, env }) {
       }
     );
   } catch (error) {
+    // Log technical details privately for debugging.
+    console.error("Developer registration failed:", error);
+
     const message = String(error?.message || "");
 
     if (
@@ -138,5 +140,4 @@ export async function onRequestPost({ request, env }) {
       500
     );
   }
-}
-
+  }
