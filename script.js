@@ -18,6 +18,19 @@ const apps = [
     apkUrl:
       "https://github.com/AppMasterM/app-master-store/releases/download/1.0.0/app-release.apk",
     webUrl: "",
+  },   
+  {
+    id: "pixelkit",
+    name: "PixelKit",
+    category: "Developer Tools",
+    version: "1.0.0",
+    icon: "🧩",
+    theme: "purple",
+    description:
+      "PixelKit for Android. Explore the app and download the latest release.",
+    apkUrl:
+      "https://github.com/AppMasterM/app-master-store/releases/download/1.0.1/pixalkit.v1.apk",
+    webUrl: "",
   },
   {
     id: "myai",
