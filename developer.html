@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d14">
+  <meta name="description" content="Developer Console for App Master Store. Register, manage your account, and publish Android APKs.">
+  <title>Developer Console — App Master Store</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="developer.css">
+  <script src="developer.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-icon">A<span>+</span></span>
+      <span>App Master <b>Store</b></span>
+    </a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="index.html#apps">Explore Apps</a>
+    </nav>
+    <a class="header-button" href="index.html">Visit Store ↗</a>
+  </header>
+
+  <main class="developer-main">
+    <section class="developer-heading">
+      <div class="eyebrow">APP MASTER STORE</div>
+      <h1>Developer <span>Console.</span></h1>
+      <p>Manage your developer account and publish your Android apps.</p>
+    </section>
+
+    <div id="notice" class="developer-notice" role="status" aria-live="polite" hidden></div>
+
+    <section id="auth-section" class="developer-panel">
+      <div class="developer-tabs" role="tablist" aria-label="Account options">
+        <button id="login-tab" class="developer-tab active" type="button"
+          role="tab" aria-selected="true" aria-controls="login-panel">
+          Log in
+        </button>
+        <button id="register-tab" class="developer-tab" type="button"
+          role="tab" aria-selected="false" aria-controls="register-panel">
+          Create account
+        </button>
+      </div>
+
+      <div id="login-panel" role="tabpanel" aria-labelledby="login-tab">
+        <h2>Welcome back</h2>
+        <p class="developer-muted">Log in to manage your published apps.</p>
+
+        <form id="login-form">
+          <label for="login-email">Email address</label>
+          <input id="login-email" name="email" type="email"
+            autocomplete="email" maxlength="254" required>
+
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password"
+            autocomplete="current-password" maxlength="128" required>
+
+          <button class="primary-button developer-submit" type="submit">
+            Log in
+          </button>
+        </form>
+      </div>
+
+      <div id="register-panel" role="tabpanel"
+        aria-labelledby="register-tab" hidden>
+        <h2>Create developer account</h2>
+        <p class="developer-muted">
+          Create an account to upload and publish your APKs.
+        </p>
+
+        <form id="register-form">
+          <label for="register-name">Developer name</label>
+          <input id="register-name" name="displayName" type="text"
+            autocomplete="name" minlength="2" maxlength="60" required>
+
+          <label for="register-email">Email address</label>
+          <input id="register-email" name="email" type="email"
+            autocomplete="email" maxlength="254" required>
+
+          <label for="register-password">Password</label>
+          <input id="register-password" name="password" type="password"
+            autocomplete="new-password" minlength="12" maxlength="128"
+            aria-describedby="password-help" required>
+          <p id="password-help" class="field-help">
+            Use at least 12 characters. Keep your password private.
+          </p>
+
+          <button class="primary-button developer-submit" type="submit">
+            Create account
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboard-section" hidden>
+      <div class="developer-panel account-panel">
+        <div>
+          <div class="eyebrow">YOUR ACCOUNT</div>
+          <h2 id="developer-name">Developer</h2>
+          <p id="developer-email" class="developer-muted"></p>
+        </div>
+        <button id="logout-button" class="secondary-button" type="button">
+          Log out
+        </button>
+      </div>
+
+      <section class="developer-panel">
+        <div class="eyebrow">PUBLISH AN APP</div>
+        <h2>Upload your APK</h2>
+        <p class="developer-muted">
+          Complete the details below. Successful uploads are published
+          immediately and become visible in the store.
+        </p>
+
+        <form id="upload-form" enctype="multipart/form-data">
+          <label for="app-name">App name</label>
+          <input id="app-name" name="name" type="text"
+            minlength="2" maxlength="80" required>
+
+          <label for="app-category">Category</label>
+          <select id="app-category" name="category" required>
+            <option value="">Choose a category</option>
+            <option value="Education">Education</option>
+            <option value="AI Tools">AI Tools</option>
+            <option value="Developer Tools">Developer Tools</option>
+            <option value="Games">Games</option>
+            <option value="Productivity">Productivity</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label for="app-version">Version</label>
+          <input id="app-version" name="version" type="text"
+            maxlength="40" placeholder="1.0.0" required>
+
+          <label for="app-description">Description</label>
+          <textarea id="app-description" name="description"
+            minlength="10" maxlength="3000" rows="5"
+            placeholder="Explain what your app does..." required></textarea>
+
+          <label for="app-file">Android APK file</label>
+          <input id="app-file" name="file" type="file"
+            accept=".apk,application/vnd.android.package-archive"
+            aria-describedby="file-help" required>
+          <p id="file-help" class="field-help">
+            APK only. Maximum configured file size: 50 MB.
+            Upload an APK you own or are authorized to distribute.
+          </p>
+
+          <button id="upload-button" class="primary-button developer-submit"
+            type="submit">
+            Upload and publish APK
+          </button>
+        </form>
+      </section>
+
+      <section class="developer-panel">
+        <div class="apps-heading">
+          <div>
+            <div class="eyebrow">YOUR COLLECTION</div>
+            <h2>Your apps</h2>
+          </div>
+          <button id="refresh-apps" class="secondary-button" type="button">
+            Refresh
+          </button>
+        </div>
+
+        <div id="my-apps" class="developer-app-list" aria-live="polite">
+          <p class="developer-muted">Loading your apps...</p>
+        </div>
+      </section>
+    </section>
+
+    <section class="developer-safety">
+      <h3>Publishing responsibly</h3>
+      <p>
+        Only upload APKs you have permission to distribute. Check your files
+        before publishing. A ZIP/APK signature check alone cannot guarantee
+        that an app is safe. Do not upload private signing keys or passwords.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a class="brand footer-brand" href="index.html">
+      <span class="brand-icon">A<span>+</span></span>
+      <span>App Master <b>Store</b></span>
+    </a>
+    <p>Discover. Download. Get more done.</p>
+    <div class="footer-bottom">
+      <span>© <span id="developer-year"></span> App Master Store</span>
+      <a href="index.html">Back to store</a>
+    </div>
+  </footer>
+</body>
+</html>
+

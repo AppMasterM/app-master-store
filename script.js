@@ -2,11 +2,11 @@
 "use strict";
 
 /* =========================================================
-   APP MASTER STORE — COMPLETE CORRECTED SCRIPT
-   Matches index.html and styles.css
+   APP MASTER STORE
+   Existing listings + dynamically published developer apps
    ========================================================= */
 
-const apps = [
+const staticApps = [
   {
     id: "study-tool",
     name: "Study Tool",
@@ -59,6 +59,9 @@ const apps = [
   },
 ];
 
+/* Keep the existing listings and add published apps from the API. */
+let apps = [...staticApps];
+
 const state = {
   search: "",
   category: "All",
@@ -92,13 +95,37 @@ function escapeHTML(value) {
   });
 }
 
+/*
+ * Allow secure external HTTPS links and safe same-origin relative paths.
+ * Reject protocol-relative URLs and dangerous schemes.
+ */
 function safeURL(value) {
   if (typeof value !== "string" || !value.trim()) {
     return "";
   }
 
+  const candidate = value.trim();
+
+  if (
+    candidate.startsWith("/") &&
+    !candidate.startsWith("//") &&
+    !candidate.includes("\\")
+  ) {
+    try {
+      const parsed = new URL(candidate, window.location.origin);
+
+      if (parsed.origin !== window.location.origin) {
+        return "";
+      }
+
+      return parsed.pathname + parsed.search + parsed.hash;
+    } catch {
+      return "";
+    }
+  }
+
   try {
-    const url = new URL(value);
+    const url = new URL(candidate);
 
     if (url.protocol !== "https:") {
       return "";
@@ -107,6 +134,123 @@ function safeURL(value) {
     return url.href;
   } catch {
     return "";
+  }
+}
+
+function iconForCategory(category) {
+  const normalized = String(category || "").toLowerCase();
+
+  if (normalized.includes("education") || normalized.includes("study")) {
+    return "📚";
+  }
+
+  if (normalized.includes("ai")) {
+    return "✦";
+  }
+
+  if (
+    normalized.includes("developer") ||
+    normalized.includes("tool") ||
+    normalized.includes("program")
+  ) {
+    return "🧩";
+  }
+
+  if (normalized.includes("game")) {
+    return "🎮";
+  }
+
+  return "📱";
+}
+
+function themeForCategory(category) {
+  const normalized = String(category || "").toLowerCase();
+
+  if (normalized.includes("ai")) return "blue";
+  if (normalized.includes("game")) return "orange";
+  if (normalized.includes("developer") || normalized.includes("tool")) {
+    return "purple";
+  }
+
+  return "purple";
+}
+
+function normalizePublishedApp(item) {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const id = String(item.id || "");
+  const name = String(item.name || "").trim();
+
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    category: String(item.category || "Other"),
+    version: String(item.version || "1.0.0"),
+    icon: iconForCategory(item.category),
+    theme: themeForCategory(item.category),
+    description: String(item.description || "No description provided."),
+    apkUrl: safeURL(item.downloadUrl),
+    webUrl: "",
+    developer: String(item.developer || ""),
+    downloads: Number(item.downloads) || 0,
+    fileSize: Number(item.fileSize) || 0,
+    dynamic: true,
+  };
+}
+
+async function loadPublishedApps() {
+  try {
+    const response = await fetch("/api/apps", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`App list request failed (${response.status}).`);
+    }
+
+    const data = await response.json();
+
+    if (!data || !Array.isArray(data.apps)) {
+      throw new Error("The app list response has an unexpected format.");
+    }
+
+    const staticIds = new Set(staticApps.map((app) => app.id));
+
+    const dynamicApps = data.apps
+      .map(normalizePublishedApp)
+      .filter((app) => app && !staticIds.has(app.id));
+
+    apps = [...staticApps, ...dynamicApps];
+
+    renderApps();
+
+    console.log(
+      "Published apps loaded:",
+      dynamicApps.length
+    );
+  } catch (error) {
+    /*
+     * Keep the existing store working if the API is unavailable.
+     * Existing hard-coded apps remain visible.
+     */
+    console.warn(
+      "Could not load published apps. Showing existing listings.",
+      error
+    );
+
+    apps = [...staticApps];
+    renderApps();
   }
 }
 
@@ -123,6 +267,7 @@ function getFilteredApps() {
       app.category,
       app.description,
       app.version,
+      app.developer || "",
     ]
       .join(" ")
       .toLowerCase();
@@ -149,8 +294,7 @@ function renderApps() {
           <a
             class="app-action primary"
             href="${escapeHTML(apk)}"
-            target="_blank"
-            rel="noopener noreferrer"
+            ${apk.startsWith("https://") ? 'target="_blank" rel="noopener noreferrer"' : ""}
           >Download APK</a>
         `
         : `
@@ -168,6 +312,14 @@ function renderApps() {
             rel="noopener noreferrer"
           >Open Web App</a>
         `
+        : "";
+
+      const developerLabel = app.developer
+        ? `<span class="app-version">By ${escapeHTML(app.developer)}</span>`
+        : "";
+
+      const downloadCount = app.dynamic
+        ? `<span class="app-version">${escapeHTML(app.downloads)} downloads</span>`
         : "";
 
       return `
@@ -188,6 +340,9 @@ function renderApps() {
           <span class="app-version">
             Version ${escapeHTML(app.version)}
           </span>
+
+          ${developerLabel}
+          ${downloadCount}
 
           <p class="app-description">
             ${escapeHTML(app.description)}
@@ -223,9 +378,7 @@ function renderApps() {
 }
 
 function updateFilters(selectedButton) {
-  if (!elements.filters) {
-    return;
-  }
+  if (!elements.filters) return;
 
   elements.filters
     .querySelectorAll("[data-category]")
@@ -252,8 +405,7 @@ function openDetails(appId) {
       <a
         class="primary-button"
         href="${escapeHTML(apk)}"
-        target="_blank"
-        rel="noopener noreferrer"
+        ${apk.startsWith("https://") ? 'target="_blank" rel="noopener noreferrer"' : ""}
       >Download APK</a>
     `
     : `
@@ -277,6 +429,14 @@ function openDetails(appId) {
       </button>
     `;
 
+  const developerLabel = app.developer
+    ? `<p>Developer: ${escapeHTML(app.developer)}</p>`
+    : "";
+
+  const downloadsLabel = app.dynamic
+    ? `<p>Downloads: ${escapeHTML(app.downloads)}</p>`
+    : "";
+
   elements.dialogContent.innerHTML = `
     <div class="dialog-body">
       <div class="app-icon ${escapeHTML(app.theme)}" aria-hidden="true">
@@ -289,6 +449,9 @@ function openDetails(appId) {
         ${escapeHTML(app.category)}
         · Version ${escapeHTML(app.version)}
       </p>
+
+      ${developerLabel}
+      ${downloadsLabel}
 
       <p>${escapeHTML(app.description)}</p>
 
@@ -378,21 +541,15 @@ function initializeStore() {
 
   bindEvents();
   renderApps();
+  loadPublishedApps();
 
-  console.log(
-    "App Master Store initialized:",
-    apps.length,
-    "apps"
-  );
+  console.log("App Master Store initialized:", apps.length, "apps");
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    initializeStore,
-    { once: true }
-  );
+  document.addEventListener("DOMContentLoaded", initializeStore, {
+    once: true,
+  });
 } else {
   initializeStore();
-                                   }
-     
+}
