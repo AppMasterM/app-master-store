@@ -158,8 +158,11 @@ function switchAuthTab(tabName) {
     registerTab.setAttribute("aria-selected", String(active));
   }
 
-  if (loginForm) loginForm.hidden = tabName !== "login";
-  if (registerForm) registerForm.hidden = tabName !== "register";
+  const loginPanel = $("login-panel");
+  const registerPanel = $("register-panel");
+
+  if (loginPanel) loginPanel.hidden = tabName !== "login";
+  if (registerPanel) registerPanel.hidden = tabName !== "register";
 }
 
 function formatBytes(bytes) {
