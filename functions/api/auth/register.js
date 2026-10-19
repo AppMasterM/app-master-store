@@ -132,12 +132,12 @@ export async function onRequestPost({ request, env }) {
         409
       );
     }
-
-    return jsonResponse(
+    
+      return jsonResponse(
       {
         error: "Account creation failed. Please try again."
       },
       500
     );
   }
-  }
+}
