@@ -1,3 +1,4 @@
+
 "use strict";
 
 import {
@@ -83,9 +84,12 @@ export async function onRequestPost({ request, env }) {
 
   const id = crypto.randomUUID();
   const salt = randomHex(16);
+  let stage = "password hashing";
 
   try {
     const passwordHash = await hashPassword(password, salt);
+
+    stage = "creating developer record";
 
     await env.DB.prepare(`
       INSERT INTO developers (
@@ -99,6 +103,8 @@ export async function onRequestPost({ request, env }) {
     `)
       .bind(id, displayName, email, salt, passwordHash)
       .run();
+
+    stage = "creating login session";
 
     const session = await createSession(env, id);
 
@@ -118,7 +124,6 @@ export async function onRequestPost({ request, env }) {
       }
     );
   } catch (error) {
-    // Log technical details privately for debugging.
     console.error("Developer registration failed:", error);
 
     const message = String(error?.message || "");
@@ -132,11 +137,9 @@ export async function onRequestPost({ request, env }) {
         409
       );
     }
-    
-      return jsonResponse(
-      {
-        error: "Account creation failed. Please try again."
-      },
+
+    return jsonResponse(
+      { error: `Registration failed during: ${stage}.` },
       500
     );
   }
