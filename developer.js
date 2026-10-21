@@ -12,7 +12,8 @@ const API = {
   me: "/api/auth/me",
   logout: "/api/auth/logout",
   upload: "/api/apps/upload",
-  mine: "/api/apps/mine"
+  mine: "/api/apps/mine",
+  edit: (id) => `/api/apps/${encodeURIComponent(id)}`
 };
 
 const MAX_APK_SIZE = 50 * 1024 * 1024;
@@ -173,6 +174,7 @@ function formatBytes(bytes) {
   }
 
   if (value < 1024) return `${value} B`;
+
   if (value < 1024 * 1024) {
     return `${(value / 1024).toFixed(1)} KB`;
   }
@@ -186,6 +188,10 @@ function createChip(text) {
   chip.textContent = text;
   return chip;
 }
+
+/* =========================================================
+   MY APPS + EDIT APP DETAILS
+   ========================================================= */
 
 function renderMyApps(apps) {
   if (!myAppsContainer) return;
@@ -212,7 +218,8 @@ function renderMyApps(apps) {
     card.appendChild(title);
 
     const description = document.createElement("p");
-    description.textContent = app.description || "No description provided.";
+    description.textContent =
+      app.description || "No description provided.";
     card.appendChild(description);
 
     const metadata = document.createElement("div");
@@ -234,13 +241,16 @@ function renderMyApps(apps) {
       createChip(`Downloads: ${Number(app.downloads) || 0}`)
     );
 
-    const isPublished = app.published === true || app.published === 1;
+    const isPublished =
+      app.published === true || app.published === 1;
 
     metadata.appendChild(
       createChip(isPublished ? "Published" : "Unpublished")
     );
 
     card.appendChild(metadata);
+
+    /* Download APK button */
 
     if (isPublished && typeof app.downloadUrl === "string") {
       const downloadUrl = app.downloadUrl;
@@ -260,6 +270,108 @@ function renderMyApps(apps) {
       }
     }
 
+    /* Edit details button */
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "dev-button dev-button-small";
+    editButton.textContent = "Edit details";
+    editButton.style.display = "inline-flex";
+    editButton.style.marginTop = "8px";
+    editButton.style.marginRight = "8px";
+
+    editButton.addEventListener("click", async () => {
+      if (!app.id) {
+        showNotice(
+          "This app is missing its ID and cannot be edited.",
+          "error"
+        );
+        return;
+      }
+
+      const name = window.prompt(
+        "App name (2–80 characters):",
+        app.name || ""
+      );
+
+      if (name === null) return;
+
+      const description = window.prompt(
+        "Description (10–3000 characters):",
+        app.description || ""
+      );
+
+      if (description === null) return;
+
+      const category = window.prompt(
+        "Category (2–40 characters):",
+        app.category || "Other"
+      );
+
+      if (category === null) return;
+
+      const version = window.prompt(
+        "Version (1–40 characters):",
+        app.version || "1.0.0"
+      );
+
+      if (version === null) return;
+
+      const details = {
+        name: name.trim(),
+        description: description.trim(),
+        category: category.trim(),
+        version: version.trim()
+      };
+
+      if (
+        details.name.length < 2 ||
+        details.name.length > 80 ||
+        details.description.length < 10 ||
+        details.description.length > 3000 ||
+        details.category.length < 2 ||
+        details.category.length > 40 ||
+        details.version.length < 1 ||
+        details.version.length > 40
+      ) {
+        showNotice(
+          "Check field lengths: name 2–80, description 10–3000, category 2–40, version 1–40 characters.",
+          "error"
+        );
+        return;
+      }
+
+      editButton.disabled = true;
+      editButton.textContent = "Saving...";
+
+      try {
+        const result = await requestJSON(API.edit(app.id), {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(details)
+        });
+
+        showNotice(
+          result.message ||
+            "App details updated successfully.",
+          "success"
+        );
+
+        await loadMyApps();
+      } catch (error) {
+        showNotice(
+          error.message || "Could not update app details.",
+          "error"
+        );
+      } finally {
+        editButton.disabled = false;
+        editButton.textContent = "Edit details";
+      }
+    });
+
+    card.appendChild(editButton);
     myAppsContainer.appendChild(card);
   }
 }
@@ -276,19 +388,24 @@ async function loadMyApps() {
 
   try {
     const data = await requestJSON(API.mine);
-
     renderMyApps(data.apps);
   } catch (error) {
     myAppsContainer.replaceChildren();
 
     const errorMessage = document.createElement("p");
     errorMessage.className = "dev-empty";
-    errorMessage.textContent = error.message || "Could not load your apps.";
+    errorMessage.textContent =
+      error.message || "Could not load your apps.";
     myAppsContainer.appendChild(errorMessage);
 
-    if (error.message.toLowerCase().includes("unauthorized")) {
+    if (
+      error.message.toLowerCase().includes("unauthorized")
+    ) {
       showAuth();
-      showNotice("Your session may have expired. Please log in again.", "error");
+      showNotice(
+        "Your session may have expired. Please log in again.",
+        "error"
+      );
     }
   }
 }
@@ -307,7 +424,9 @@ async function checkSession() {
   }
 }
 
-/* Login */
+/* =========================================================
+   LOGIN
+   ========================================================= */
 
 if (loginForm) {
   loginForm.addEventListener("submit", async (event) => {
@@ -318,11 +437,17 @@ if (loginForm) {
     const password = $("login-password")?.value;
 
     if (!email || !password) {
-      showNotice("Enter your email and password.", "error");
+      showNotice(
+        "Enter your email and password.",
+        "error"
+      );
       return;
     }
 
-    const button = loginForm.querySelector('button[type="submit"]');
+    const button = loginForm.querySelector(
+      'button[type="submit"]'
+    );
+
     setBusy(button, true, "Logging in...");
 
     try {
@@ -336,22 +461,36 @@ if (loginForm) {
 
       const session = await requestJSON(API.me);
 
-      if (!session.authenticated || !session.developer) {
-        throw new Error("Login succeeded, but your session could not be verified.");
+      if (
+        !session.authenticated ||
+        !session.developer
+      ) {
+        throw new Error(
+          "Login succeeded, but your session could not be verified."
+        );
       }
 
-      showNotice("You are logged in successfully.", "success");
+      showNotice(
+        "You are logged in successfully.",
+        "success"
+      );
+
       showDashboard(session.developer);
       loginForm.reset();
     } catch (error) {
-      showNotice(error.message || "Login failed. Please try again.", "error");
+      showNotice(
+        error.message || "Login failed. Please try again.",
+        "error"
+      );
     } finally {
       setBusy(button, false);
     }
   });
 }
 
-/* Registration */
+/* =========================================================
+   REGISTRATION
+   ========================================================= */
 
 if (registerForm) {
   registerForm.addEventListener("submit", async (event) => {
@@ -363,16 +502,25 @@ if (registerForm) {
     const password = $("register-password")?.value;
 
     if (!displayName || !email || !password) {
-      showNotice("Complete all registration fields.", "error");
+      showNotice(
+        "Complete all registration fields.",
+        "error"
+      );
       return;
     }
 
     if (password.length < 12) {
-      showNotice("Your password must be at least 12 characters long.", "error");
+      showNotice(
+        "Your password must be at least 12 characters long.",
+        "error"
+      );
       return;
     }
 
-    const button = registerForm.querySelector('button[type="submit"]');
+    const button = registerForm.querySelector(
+      'button[type="submit"]'
+    );
+
     setBusy(button, true, "Creating account...");
 
     try {
@@ -381,19 +529,31 @@ if (registerForm) {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ displayName, email, password })
+        body: JSON.stringify({
+          displayName,
+          email,
+          password
+        })
       });
 
       const session = await requestJSON(API.me);
 
-      if (!session.authenticated || !session.developer) {
+      if (
+        !session.authenticated ||
+        !session.developer
+      ) {
         throw new Error(
           "Your account may have been created, but automatic login failed. Please log in."
         );
       }
 
       registerForm.reset();
-      showNotice("Your developer account is ready!", "success");
+
+      showNotice(
+        "Your developer account is ready!",
+        "success"
+      );
+
       showDashboard(session.developer);
     } catch (error) {
       showNotice(
@@ -406,7 +566,9 @@ if (registerForm) {
   });
 }
 
-/* Login/register tabs */
+/* =========================================================
+   LOGIN / REGISTRATION TABS
+   ========================================================= */
 
 if ($("login-tab")) {
   $("login-tab").addEventListener("click", () => {
@@ -422,7 +584,9 @@ if ($("register-tab")) {
   });
 }
 
-/* Logout */
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
 if (logoutButton) {
   logoutButton.addEventListener("click", async () => {
@@ -436,48 +600,74 @@ if (logoutButton) {
 
       showAuth();
       switchAuthTab("login");
-      showNotice("You have been logged out.", "success");
+
+      showNotice(
+        "You have been logged out.",
+        "success"
+      );
     } catch (error) {
-      showNotice(error.message || "Logout failed. Try again.", "error");
+      showNotice(
+        error.message || "Logout failed. Try again.",
+        "error"
+      );
     } finally {
       setBusy(logoutButton, false);
     }
   });
 }
 
-/* Refresh app list */
+/* =========================================================
+   REFRESH APP LIST
+   ========================================================= */
 
 if (refreshAppsButton) {
   refreshAppsButton.addEventListener("click", loadMyApps);
 }
 
-/* APK upload */
+/* =========================================================
+   APK UPLOAD
+   ========================================================= */
 
 if (uploadForm) {
   uploadForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearNotice();
 
-    const fileInput = uploadForm.querySelector('input[name="file"]');
+    const fileInput = uploadForm.querySelector(
+      'input[name="file"]'
+    );
+
     const file = fileInput?.files?.[0];
 
     if (!file) {
-      showNotice("Choose an APK file first.", "error");
+      showNotice(
+        "Choose an APK file first.",
+        "error"
+      );
       return;
     }
 
     if (!file.name.toLowerCase().endsWith(".apk")) {
-      showNotice("Please select a file ending in .apk.", "error");
+      showNotice(
+        "Please select a file ending in .apk.",
+        "error"
+      );
       return;
     }
 
     if (file.size === 0) {
-      showNotice("The selected APK file is empty.", "error");
+      showNotice(
+        "The selected APK file is empty.",
+        "error"
+      );
       return;
     }
 
     if (file.size > MAX_APK_SIZE) {
-      showNotice("Your APK is larger than the 50 MB upload limit.", "error");
+      showNotice(
+        "Your APK is larger than the 50 MB upload limit.",
+        "error"
+      );
       return;
     }
 
@@ -511,15 +701,21 @@ if (uploadForm) {
   });
 }
 
-/* Set the footer year */
+/* =========================================================
+   FOOTER YEAR
+   ========================================================= */
 
 const yearElement = $("developer-year");
 
 if (yearElement) {
-  yearElement.textContent = String(new Date().getFullYear());
+  yearElement.textContent = String(
+    new Date().getFullYear()
+  );
 }
 
-/* Start */
+/* =========================================================
+   START
+   ========================================================= */
 
 switchAuthTab("login");
 checkSession();
