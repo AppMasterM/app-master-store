@@ -8,6 +8,41 @@
 
 const staticApps = [];
 
+const elements = {
+  year: document.getElementById("current-year"),
+  filters: document.getElementById("category-filters"),
+  search: document.getElementById("search-input"),
+  grid: document.getElementById("app-grid"),
+  count: document.getElementById("app-count"),
+  empty: document.getElementById("empty-state"),
+  clear: document.getElementById("clear-search"),
+  dialog: document.getElementById("app-dialog"),
+  dialogClose: document.getElementById("dialog-close"),
+  dialogContent: document.getElementById("dialog-content"),
+};
+
+const state = {
+  search: "",
+  category: "All",
+};
+
+let apps = [];
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+
+    return entities[character];
+  });
+}
+
+
 /*
  * Allow secure external HTTPS links and safe same-origin relative paths.
  * Reject protocol-relative URLs and dangerous schemes.
