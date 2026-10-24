@@ -2,6 +2,18 @@
   color-scheme: dark;
   --bg: #0b0d14;
   --panel: #121620;
+  --panel-light: #181e2b;
+  --text: #f4f6fc;
+  --muted: #9aa4b8;
+  --accent: #a78bfa;
+  --accent-2: #67e8f9;
+  --border: rgba(255, 255, 255, 0.09);
+  --radius: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
    
 /* =========================================
    APP MASTER STORE — CONTENT & POLICY STYLES
