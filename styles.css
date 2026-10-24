@@ -1,4 +1,8 @@
-
+:root {
+  color-scheme: dark;
+  --bg: #0b0d14;
+  --panel: #121620;
+   
 /* =========================================
    APP MASTER STORE — CONTENT & POLICY STYLES
    Add this block at the end of styles.css
